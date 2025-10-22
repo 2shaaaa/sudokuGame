@@ -7,7 +7,6 @@
 #include <string>
 #include "sudoku.h"
 
-
 class Renderer {
 public:
     static const int CELL_SIZE = 60;
@@ -18,20 +17,21 @@ public:
     ~Renderer();
 
     bool init();
+    void render(const Sudoku& sudoku, int selectedRow = -1, int selectedCol = -1);
     void close();
-    void renderGrid();
     
 private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_Font* font;
+
+    void renderGrid();
+    void renderNumbers(const Sudoku& sudoku);
+    void renderNumber(int number, int row, int col, bool isFixed);
+
     static SDL_Texture *cachedBackground;
     static SDL_Texture *resetTexture;
 
-
-    // void renderNumbers(const Sudoku& sudoku);
-    // void renderSelectedCell(int row, int col);
-    // void renderNumber(int number, int row, int col, bool isFixed);
 };
 
 #endif

@@ -95,16 +95,27 @@ void Renderer::close() {
     SDL_Quit();
 }
 
-void Renderer::renderGrid() {
-	// Grid background and line color (black)
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+void Renderer::render(const Sudoku& sudoku, int selectedRow, int selectedCol) {
+    // Clear screen with white background
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
 
+    // Draw top padding
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_Rect topPadding = {0, 0, WINDOW_WIDTH, 50};
     SDL_RenderFillRect(renderer, &topPadding);
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    // Set color for grid
+    SDL_SetRenderDrawColor(renderer, 110, 140, 251, 255);
+    renderGrid();
+    renderNumbers(sudoku);
+
+    // Present the final render
+    SDL_RenderPresent(renderer);
+}
+
+void Renderer::renderGrid() {
+    SDL_SetRenderDrawColor(renderer, 56, 87, 246, 255);
 
 	// Move grid down by 50 pixels to accommodate score display
 	const int GRID_START_Y = 50;
@@ -130,6 +141,48 @@ void Renderer::renderGrid() {
 		SDL_Rect rect = {x - lineWidth/2, GRID_START_Y, lineWidth, GRID_PIXELS};
 		SDL_RenderFillRect(renderer, &rect);
 	}
+}
 
-    SDL_RenderPresent(renderer);
+void Renderer::renderNumbers(const Sudoku& sudoku) {
+    SDL_Color fixedColor = {0, 0, 0, 255};
+    SDL_Color userColor = {0, 0, 255, 255};
+
+    for (int row = 0; row < Sudoku::GRID_SIZE; row++) {
+        for (int col = 0; col < Sudoku::GRID_SIZE; col++) {
+            int number = sudoku.getNumber(row, col);
+            if (number != 0) {
+                bool isFixed = !sudoku.isCellEditable(row, col);
+                renderNumber(number, row, col, isFixed);
+            }
+        }
+    }
+}
+
+void Renderer::renderNumber(int number, int row, int col, bool isFixed) {
+    SDL_Color color = isFixed ? SDL_Color{0, 0, 0, 255} : SDL_Color{0, 0, 255, 255};
+
+    std::string text = std::to_string(number);
+    SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
+    if (!surface) return;
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    if (!texture) return;
+
+    int textW, textH;
+    SDL_QueryTexture(texture, nullptr, nullptr, &textW, &textH);
+
+    // Calculate the grid offset for proper positioning
+    const int GRID_START_Y = 50;
+    const int GRID_START_X = (WINDOW_WIDTH - (9 * CELL_SIZE)) / 2;
+
+    SDL_Rect dstRect = {
+        GRID_START_X + col * CELL_SIZE + (CELL_SIZE - textW) / 2,
+        GRID_START_Y + row * CELL_SIZE + (CELL_SIZE - textH) / 2,
+        textW,
+        textH
+    };
+
+    SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
+    SDL_DestroyTexture(texture);
 }
