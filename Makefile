@@ -7,8 +7,8 @@ SDL_FLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf SDL2_mix
 # Target
 TARGET = sudoku
 
-# Nguồn (các file trong src/)
-SRCS = main.cpp game.cpp renderer.cpp
+# Source files
+SRCS = main.cpp game.cpp renderer.cpp sudoku.cpp
 
 # Thư mục chứa source
 SRC_DIR = src
