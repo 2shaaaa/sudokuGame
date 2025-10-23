@@ -14,9 +14,12 @@ public:
 
 private: 
     Renderer renderer;
+    Sudoku sudoku;
     bool running;
     int selectedRow;
     int selectedCol;
+
+    void handleEvents();
 
 };
 
