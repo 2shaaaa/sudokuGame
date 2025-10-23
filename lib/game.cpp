@@ -26,10 +26,26 @@ void Game::run() {
 }
 
 void Game::handleEvents() {
-    SDL_Event e;
-    while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_QUIT) {
-            running = false;
-        } 
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+            case SDL_QUIT:
+                running = false;
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    handleMouseClick(event.button.x, event.button.y);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void Game::handleMouseClick(int x, int y) {
+    renderer.getGridPosition(x, y, selectedRow, selectedCol);
+    if(!sudoku.isCellEditable(selectedRow, selectedCol)) {
+        selectedRow = selectedCol = -1;
     }
 }

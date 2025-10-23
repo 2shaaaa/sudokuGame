@@ -35,7 +35,7 @@ void Sudoku::generatePuzzle() {
 
     // Mark all cells as fixed
     for(auto& row : fixed) {
-        std::fill(row.begin(), row.end(), true);
+        std::fill(row.begin(), row.end(), false);
     }
 }
 

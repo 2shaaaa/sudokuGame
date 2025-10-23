@@ -105,6 +105,9 @@ void Renderer::render(const Sudoku& sudoku, int selectedRow, int selectedCol) {
     SDL_Rect topPadding = {0, 0, WINDOW_WIDTH, 50};
     SDL_RenderFillRect(renderer, &topPadding);
 
+    if (selectedRow >= 0 && selectedCol >= 0) {
+        renderSelectedCell(selectedRow, selectedCol);
+    }
     // Set color for grid
     SDL_SetRenderDrawColor(renderer, 110, 140, 251, 255);
     renderGrid();
@@ -185,4 +188,42 @@ void Renderer::renderNumber(int number, int row, int col, bool isFixed) {
 
     SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
     SDL_DestroyTexture(texture);
+}
+
+void Renderer::getGridPosition(int mouseX, int mouseY, int &row, int &col) {
+    const int GRID_START_Y = 50;
+    row = (mouseY - GRID_START_Y) / CELL_SIZE;
+    col = mouseX / CELL_SIZE;
+
+    // Clamp values to be within grid bounds
+    if (row < 0) row = 0;
+    if (row >= Sudoku::GRID_SIZE) row = Sudoku::GRID_SIZE - 1;
+    if (col < 0) col = 0;
+    if (col >= Sudoku::GRID_SIZE) col = Sudoku::GRID_SIZE - 1;
+}
+
+void Renderer::renderSelectedCell(int row, int col) {
+    const int GRID_START_Y = 50;
+    const int GRID_PIXELS = Sudoku::GRID_SIZE * CELL_SIZE;
+    const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
+
+    SDL_SetRenderDrawColor(renderer, 173, 216, 230, 100); // Light blue with some transparency
+    SDL_Rect rowRect = {GRID_START_X, GRID_START_Y + row * CELL_SIZE, GRID_PIXELS, CELL_SIZE};    
+    SDL_SetRenderDrawColor(renderer, 173, 216, 230, 100); // Light blue with some transparency
+    SDL_Rect colRect = {GRID_START_X +col * CELL_SIZE, GRID_START_Y, CELL_SIZE, GRID_PIXELS};
+
+    // Highlight the 3x3 subgrid with yet another faint blue
+    SDL_SetRenderDrawColor(renderer, 225, 238, 255, 255); // Third very light blue
+    int subgridStartRow = (row / 3) * 3;
+    int subgridStartCol = (col / 3) * 3;
+    SDL_Rect subgridRect = {GRID_START_X + subgridStartCol * CELL_SIZE,GRID_START_Y + subgridStartRow * CELL_SIZE, CELL_SIZE * 3, CELL_SIZE * 3};
+
+    SDL_RenderFillRect(renderer, &rowRect);
+    SDL_RenderFillRect(renderer, &colRect);
+    SDL_RenderFillRect(renderer, &subgridRect);
+
+    // Highlight the selected cell with the original light blue color
+    SDL_SetRenderDrawColor(renderer, 173, 216, 230, 255); // Original light blue
+    SDL_Rect selectedRect = {GRID_START_X + col * CELL_SIZE, GRID_START_Y + row * CELL_SIZE, CELL_SIZE, CELL_SIZE};
+    SDL_RenderFillRect(renderer, &selectedRect);
 }

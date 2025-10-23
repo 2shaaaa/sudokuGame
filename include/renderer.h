@@ -18,6 +18,7 @@ public:
 
     bool init();
     void render(const Sudoku& sudoku, int selectedRow = -1, int selectedCol = -1);
+    void getGridPosition(int mouseX, int mouseY, int &row, int &col);
     void close();
     
 private:
@@ -28,6 +29,7 @@ private:
     void renderGrid();
     void renderNumbers(const Sudoku& sudoku);
     void renderNumber(int number, int row, int col, bool isFixed);
+    void renderSelectedCell(int row, int col);
 
     static SDL_Texture *cachedBackground;
     static SDL_Texture *resetTexture;

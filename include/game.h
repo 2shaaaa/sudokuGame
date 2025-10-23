@@ -20,6 +20,7 @@ private:
     int selectedCol;
 
     void handleEvents();
+    void handleMouseClick(int x, int y);
 
 };
 
