@@ -227,3 +227,80 @@ void Renderer::renderSelectedCell(int row, int col) {
     SDL_Rect selectedRect = {GRID_START_X + col * CELL_SIZE, GRID_START_Y + row * CELL_SIZE, CELL_SIZE, CELL_SIZE};
     SDL_RenderFillRect(renderer, &selectedRect);
 }
+
+void Renderer::renderNumberCounts(const Sudoku& sudoku) {
+    auto counts = calculateNumberCounts(sudoku);
+    
+    // Use same grid constants for alignment
+    const int GRID_START_Y = 50;
+    const int GRID_PIXELS = Sudoku::GRID_SIZE * CELL_SIZE;
+    const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
+    
+    // Position the counter row just below the grid
+    const int COUNTER_Y = GRID_START_Y + GRID_PIXELS + 10;
+    
+    for (int i = 0; i < 9; i++) {
+        SDL_Color color = (counts[i] == 9) ? SDL_Color{0, 255, 0, 255} : SDL_Color{0, 0, 0, 255};
+        
+        // Render main number (1-9) with bold style
+        TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+        std::string numStr = std::to_string(i + 1);
+        SDL_Surface* numSurface = TTF_RenderText_Blended(font, numStr.c_str(), color);
+        if (!numSurface) continue;
+        
+        SDL_Texture* numTexture = SDL_CreateTextureFromSurface(renderer, numSurface);
+        if (!numTexture) {
+            SDL_FreeSurface(numSurface);
+            continue;
+        }
+        
+        // Center number in its cell
+        SDL_Rect numRect = {
+            GRID_START_X + i * CELL_SIZE + (CELL_SIZE - numSurface->w) / 2,
+            COUNTER_Y,
+            numSurface->w,
+            numSurface->h
+        };
+        SDL_RenderCopy(renderer, numTexture, nullptr, &numRect);
+        
+        // Render frequency count as tiny superscript
+        if (counts[i] < 9) {
+            TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+            std::string countStr = std::to_string(counts[i]);
+            SDL_Surface* countSurface = TTF_RenderText_Blended(font, countStr.c_str(), color);
+            if (countSurface) {
+                SDL_Texture* countTexture = SDL_CreateTextureFromSurface(renderer, countSurface);
+                if (countTexture) {
+                    // Position and size the superscript
+                    SDL_Rect countRect = {
+                        numRect.x + numRect.w - 2,        // Slightly overlapping with number
+                        numRect.y - numRect.h/4,          // Raised above the baseline
+                        static_cast<int>(countSurface->w * 0.5),  // Make it 40% of original size
+                        static_cast<int>(countSurface->h * 0.5)
+                    };
+                    SDL_RenderCopy(renderer, countTexture, nullptr, &countRect);
+                    SDL_DestroyTexture(countTexture);
+                }
+                SDL_FreeSurface(countSurface);
+            }
+        }
+        
+        SDL_FreeSurface(numSurface);
+        SDL_DestroyTexture(numTexture);
+    }
+    
+    TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+}
+
+std::array<int, 9> Renderer::calculateNumberCounts(const Sudoku& sudoku) const {
+    std::array<int, 9> counts = {0};
+    for (int row = 0; row < Sudoku::GRID_SIZE; row++) {
+        for (int col = 0; col < Sudoku::GRID_SIZE; col++) {
+            int number = sudoku.getNumber(row, col);
+            if (number != 0) {
+                counts[number - 1]++;
+            }
+        }
+    }
+    return counts;
+}

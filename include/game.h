@@ -21,7 +21,7 @@ private:
 
     void handleEvents();
     void handleMouseClick(int x, int y);
-
+    void handleKeyPress(SDL_Keycode key);
 };
 
 #endif
