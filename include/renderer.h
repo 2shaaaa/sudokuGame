@@ -20,6 +20,8 @@ public:
     bool init();
     // render the whole game
     void render(const Sudoku& sudoku, int selectedRow = -1, int selectedCol = -1);
+    // display win game message
+    void renderMessage(const std::string& message);
     // convert mouse coordinates to grid position / where mousee points to
     void getGridPosition(int mouseX, int mouseY, int& row, int& col);
     void close();

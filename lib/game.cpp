@@ -68,3 +68,11 @@ void Game::handleKeyPress(SDL_Keycode key) {
         selectedRow = selectedCol = -1;
     }
 }
+
+void Game::checkWinCondition() {
+    if (sudoku.isSolved()) {
+        renderer.renderMessage("Congratulations! You solved the puzzle!");
+        SDL_Delay(5000); // Show message for 3 seconds
+        running = false;
+    }
+}

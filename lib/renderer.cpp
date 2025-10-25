@@ -190,6 +190,35 @@ void Renderer::renderNumber(int number, int row, int col, bool isFixed) {
     SDL_DestroyTexture(texture);
 }
 
+void Renderer::renderMessage(const std::string& message) {
+    SDL_Color color = {0, 128, 0, 255}; // Green color for success message
+    SDL_Surface* surface = TTF_RenderText_Blended(font, message.c_str(), color);
+    if (!surface) return;
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    if (!texture) return;
+
+    int textW, textH;
+    SDL_QueryTexture(texture, nullptr, nullptr, &textW, &textH);
+
+    SDL_Rect dstRect = {
+        (WINDOW_WIDTH - textW) / 2,
+        WINDOW_HEIGHT / 2 - textH / 2,
+        textW,
+        textH
+    };
+
+    // Draw semi-transparent background
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
+    SDL_Rect bgRect = {0, WINDOW_WIDTH/2 - 30, WINDOW_HEIGHT, 60};
+    SDL_RenderFillRect(renderer, &bgRect);
+
+    SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
+    SDL_DestroyTexture(texture);
+    SDL_RenderPresent(renderer);
+}
+
 void Renderer::getGridPosition(int mouseX, int mouseY, int &row, int &col) {
     const int GRID_START_Y = 50;
     row = (mouseY - GRID_START_Y) / CELL_SIZE;
