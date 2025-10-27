@@ -19,6 +19,8 @@ void Game::run() {
     SDL_Event e;
     while (running) {
         handleEvents();
+        // If a win was detected during event handling, stop before drawing
+        if (!running) break;
         renderer.render(sudoku, selectedRow, selectedCol);
         SDL_Delay(16); // Cap at ~60 FPS
     }
@@ -71,6 +73,9 @@ void Game::handleKeyPress(SDL_Keycode key) {
 
 void Game::checkWinCondition() {
     if (sudoku.isSolved()) {
+        // Ensure final board is rendered
+        renderer.render(sudoku, selectedRow, selectedCol);
+        SDL_Delay(100); // small pause so player sees final placement
         renderer.renderMessage("Congratulations! You solved the puzzle!");
         SDL_Delay(10000); // Show message for 10 seconds
         running = false;

@@ -55,7 +55,7 @@ bool Renderer::init() {
         return false;
     }
 
-    font = TTF_OpenFont("/System/Library/Fonts/Supplemental/Arial.ttf", 24);
+    font = TTF_OpenFont("/System/Library/Fonts/Supplemental/Chalkboard.ttc", 24); //Comic Sans MS
     if (!font) {
         std::cerr << "Failed to load font! TTF_Error: " << TTF_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
@@ -156,14 +156,20 @@ void Renderer::renderNumbers(const Sudoku& sudoku) {
             int number = sudoku.getNumber(row, col);
             if (number != 0) {
                 bool isFixed = !sudoku.isCellEditable(row, col);
-                renderNumber(number, row, col, isFixed);
+                bool hasConflict = sudoku.hasConflict(row, col);
+                renderNumber(number, row, col, isFixed, hasConflict);
             }
         }
     }
 }
 
-void Renderer::renderNumber(int number, int row, int col, bool isFixed) {
-    SDL_Color color = isFixed ? SDL_Color{0, 0, 0, 255} : SDL_Color{0, 0, 255, 255};
+void Renderer::renderNumber(int number, int row, int col, bool isFixed, bool hasConflict) {
+    SDL_Color color;
+    if (hasConflict) {
+        color = {255, 0, 0, 255}; // Red for conflicting numbers
+    } else {
+        color = isFixed ? SDL_Color{0, 0, 0, 255} : SDL_Color{0, 0, 255, 255}; // Black for fixed, Blue for user
+    }
 
     std::string text = std::to_string(number);
     SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
@@ -210,9 +216,13 @@ void Renderer::renderMessage(const std::string& message) {
         textH
     };
 
-    // Draw semi-transparent background
+    // Enable blending so the semi-transparent background renders correctly
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+
+    // Draw semi-transparent background (centered)
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
-    SDL_Rect bgRect = {0, WINDOW_WIDTH/2 - 30, WINDOW_HEIGHT, 60};
+    SDL_Rect bgRect = {0, WINDOW_HEIGHT / 2 - 30, WINDOW_WIDTH, 60};
     SDL_RenderFillRect(renderer, &bgRect);
 
     SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
@@ -243,7 +253,7 @@ void Renderer::renderSelectedCell(int row, int col) {
     SDL_Rect colRect = {GRID_START_X +col * CELL_SIZE, GRID_START_Y, CELL_SIZE, GRID_PIXELS};
 
     // Highlight the 3x3 subgrid with yet another faint blue
-    SDL_SetRenderDrawColor(renderer, 225, 238, 255, 255); // Third very light blue
+    SDL_SetRenderDrawColor(renderer, 210, 233, 253, 255); // Third very light blue
     int subgridStartRow = (row / 3) * 3;
     int subgridStartCol = (col / 3) * 3;
     SDL_Rect subgridRect = {GRID_START_X + subgridStartCol * CELL_SIZE,GRID_START_Y + subgridStartRow * CELL_SIZE, CELL_SIZE * 3, CELL_SIZE * 3};

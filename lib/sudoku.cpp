@@ -55,16 +55,13 @@ bool Sudoku::setNumber(int row, int col, int num) {
     if(!isCellEditable(row, col)) {
         return false;
     }
-    // Temporarily remove the current number to check validity
-    int temp = grid[row][col];
-    grid[row][col] = 0;
-
-    if (num == 0 || isValid(row, col, num)) {
+    
+    // Allow any number (0-9) to be entered
+    if (num >= 0 && num <= 9) {
         grid[row][col] = num;
         return true;
     }
-
-    grid[row][col] = temp;
+    
     return false;
 }
 
@@ -198,6 +195,39 @@ bool Sudoku::isValidInBox(int startRow, int startCol, int num) const {
         }
     }
     return true;
+}
+
+bool Sudoku::hasConflict(int row, int col) const {
+    if (row < 0 || col < 0 || row >= GRID_SIZE || col >= GRID_SIZE || grid[row][col] == 0) {
+        return false;
+    }
+
+    int num = grid[row][col];
+    int count = 0;
+
+    // Check row
+    for (int c = 0; c < GRID_SIZE; c++) {
+        if (grid[row][c] == num) count++;
+    }
+    if (count > 1) return true;
+
+    // Check column
+    count = 0;
+    for (int r = 0; r < GRID_SIZE; r++) {
+        if (grid[r][col] == num) count++;
+    }
+    if (count > 1) return true;
+
+    // Check box
+    count = 0;
+    int boxStartRow = row - (row % SUBGRID_SIZE);
+    int boxStartCol = col - (col % SUBGRID_SIZE);
+    for (int r = 0; r < SUBGRID_SIZE; r++) {
+        for (int c = 0; c < SUBGRID_SIZE; c++) {
+            if (grid[boxStartRow + r][boxStartCol + c] == num) count++;
+        }
+    }
+    return count > 1;
 }
 
 

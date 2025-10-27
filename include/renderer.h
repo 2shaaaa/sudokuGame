@@ -33,7 +33,7 @@ private:
 
     void renderGrid();
     void renderNumbers(const Sudoku& sudoku);
-    void renderNumber(int number, int row, int col, bool isFixed);
+    void renderNumber(int number, int row, int col, bool isFixed, bool hasConflict);
     void renderSelectedCell(int row, int col);
     void renderNumberCounts(const Sudoku& sudoku);
     std::array<int, 9> calculateNumberCounts(const Sudoku& sudoku) const;

@@ -17,6 +17,7 @@ public:
     bool setNumber(int row, int col, int num);
     int getNumber(int row, int col) const;
     bool isSolved() const;
+    bool hasConflict(int row, int col) const;
 
 private:
     std::vector<std::vector<int>> grid;
