@@ -16,6 +16,7 @@ public:
     bool isCellEditable(int row, int col) const;
     bool setNumber(int row, int col, int num);
     int getNumber(int row, int col) const;
+    bool isSolved() const;
 
 private:
     std::vector<std::vector<int>> grid;
@@ -23,6 +24,7 @@ private:
     
     bool solveGrid();
     bool findEmptyCell(int &row, int &col) const;
+    void removeCells();
     bool isValidInRow(int row, int num) const;
     bool isValidInCol(int col, int num) const;
     bool isValidInBox(int startRow, int startCol, int num) const;

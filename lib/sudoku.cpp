@@ -35,8 +35,10 @@ void Sudoku::generatePuzzle() {
 
     // Mark all cells as fixed
     for(auto& row : fixed) {
-        std::fill(row.begin(), row.end(), false);
+        std::fill(row.begin(), row.end(), true);
     }
+
+    removeCells();
 }
 
 bool Sudoku::isValid(int row, int col, int num) const {
@@ -70,6 +72,53 @@ int Sudoku::getNumber(int row, int col) const {
     return grid[row][col];
 }
 
+bool Sudoku::isSolved() const {
+    // Check if all cells are filled
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
+            if (grid[i][j] == 0) {
+                return false;
+            }
+        }
+    }
+
+    // Check each row
+    for (int row = 0; row < GRID_SIZE; row++) {
+        std::vector<bool> seen(GRID_SIZE + 1, false);
+        for (int col = 0; col < GRID_SIZE; col++) {
+            int num = grid[row][col];
+            if (seen[num]) return false;
+            seen[num] = true;
+        }
+    }
+
+    // Check each column
+    for (int col = 0; col < GRID_SIZE; col++) {
+        std::vector<bool> seen(GRID_SIZE + 1, false);
+        for (int row = 0; row < GRID_SIZE; row++) {
+            int num = grid[row][col];
+            if (seen[num]) return false;
+            seen[num] = true;
+        }
+    }
+
+    // Check each 3x3 box
+    for (int boxRow = 0; boxRow < GRID_SIZE; boxRow += SUBGRID_SIZE) {
+        for (int boxCol = 0; boxCol < GRID_SIZE; boxCol += SUBGRID_SIZE) {
+            std::vector<bool> seen(GRID_SIZE + 1, false);
+            for (int i = 0; i < SUBGRID_SIZE; i++) {
+                for (int j = 0; j < SUBGRID_SIZE; j++) {
+                    int num = grid[boxRow + i][boxCol + j];
+                    if (seen[num]) return false;
+                    seen[num] = true;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 bool Sudoku::solveGrid() {
     int row, col;
     if (!findEmptyCell(row, col)) {
@@ -94,6 +143,21 @@ bool Sudoku::solveGrid() {
         }
     }
     return false;
+}
+
+void Sudoku::removeCells() {
+    // Remove about 50-60 numbers
+    int cellsToRemove = 45 + (std::rand() % 11);
+    while (cellsToRemove > 0) {
+        int row = std::rand() % GRID_SIZE;
+        int col = std::rand() % GRID_SIZE;
+        
+        if (grid[row][col] != 0) {
+            grid[row][col] = 0;
+            fixed[row][col] = false;
+            cellsToRemove--;
+        }
+    }
 }
 
 bool Sudoku::findEmptyCell(int &row, int &col) const {

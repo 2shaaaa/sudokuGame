@@ -112,6 +112,7 @@ void Renderer::render(const Sudoku& sudoku, int selectedRow, int selectedCol) {
     SDL_SetRenderDrawColor(renderer, 110, 140, 251, 255);
     renderGrid();
     renderNumbers(sudoku);
+    renderNumberCounts(sudoku);
 
     // Present the final render
     SDL_RenderPresent(renderer);
