@@ -10,7 +10,7 @@
 class Renderer {
 public:
     static const int CELL_SIZE = 60;
-    static const int WINDOW_WIDTH = CELL_SIZE * Sudoku::GRID_SIZE ;
+    static const int WINDOW_WIDTH = CELL_SIZE * Sudoku::GRID_SIZE + 100;
     static const int WINDOW_HEIGHT = CELL_SIZE * Sudoku::GRID_SIZE + 100;
 
     Renderer();

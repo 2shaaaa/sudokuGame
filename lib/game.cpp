@@ -49,8 +49,17 @@ void Game::handleEvents() {
 }
 
 void Game::handleMouseClick(int x, int y) {
-    renderer.getGridPosition(x, y, selectedRow, selectedCol);
-    if(!sudoku.isCellEditable(selectedRow, selectedCol)) {
+    int newRow, newCol;
+    renderer.getGridPosition(x, y, newRow, newCol);
+    // Toggle selection if clicking the same cell
+    if (newRow == selectedRow && newCol == selectedCol) {
+        selectedRow = selectedCol = -1;
+        return;
+    }
+    if(sudoku.isCellEditable(newRow, newCol)) {
+        selectedRow = newRow;
+        selectedCol = newCol;
+    } else {
         selectedRow = selectedCol = -1;
     }
 }

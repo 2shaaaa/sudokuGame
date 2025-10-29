@@ -108,8 +108,7 @@ void Renderer::render(const Sudoku& sudoku, int selectedRow, int selectedCol) {
     if (selectedRow >= 0 && selectedCol >= 0) {
         renderSelectedCell(selectedRow, selectedCol);
     }
-    // Set color for grid
-    SDL_SetRenderDrawColor(renderer, 110, 140, 251, 255);
+
     renderGrid();
     renderNumbers(sudoku);
     renderNumberCounts(sudoku);
@@ -148,9 +147,6 @@ void Renderer::renderGrid() {
 }
 
 void Renderer::renderNumbers(const Sudoku& sudoku) {
-    SDL_Color fixedColor = {0, 0, 0, 255};
-    SDL_Color userColor = {0, 0, 255, 255};
-
     for (int row = 0; row < Sudoku::GRID_SIZE; row++) {
         for (int col = 0; col < Sudoku::GRID_SIZE; col++) {
             int number = sudoku.getNumber(row, col);
@@ -232,8 +228,9 @@ void Renderer::renderMessage(const std::string& message) {
 
 void Renderer::getGridPosition(int mouseX, int mouseY, int &row, int &col) {
     const int GRID_START_Y = 50;
+    const int GRID_START_X = 50;
     row = (mouseY - GRID_START_Y) / CELL_SIZE;
-    col = mouseX / CELL_SIZE;
+    col = (mouseX - GRID_START_X) / CELL_SIZE;
 
     // Clamp values to be within grid bounds
     if (row < 0) row = 0;
@@ -247,9 +244,9 @@ void Renderer::renderSelectedCell(int row, int col) {
     const int GRID_PIXELS = Sudoku::GRID_SIZE * CELL_SIZE;
     const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
 
-    SDL_SetRenderDrawColor(renderer, 173, 216, 230, 100); // Light blue with some transparency
+    // SDL_SetRenderDrawColor(renderer, 173, 216, 230, 100); // Light blue with some transparency
     SDL_Rect rowRect = {GRID_START_X, GRID_START_Y + row * CELL_SIZE, GRID_PIXELS, CELL_SIZE};    
-    SDL_SetRenderDrawColor(renderer, 173, 216, 230, 100); // Light blue with some transparency
+    // SDL_SetRenderDrawColor(renderer, 173, 216, 230, 100); // Light blue with some transparency
     SDL_Rect colRect = {GRID_START_X +col * CELL_SIZE, GRID_START_Y, CELL_SIZE, GRID_PIXELS};
 
     // Highlight the 3x3 subgrid with yet another faint blue
