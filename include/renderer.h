@@ -25,6 +25,7 @@ public:
     // convert mouse coordinates to grid position / where mousee points to
     void getGridPosition(int mouseX, int mouseY, int& row, int& col);
     void close();
+    void renderTimer(int elapsedSeconds);
     
 private:
     SDL_Window* window;
@@ -36,6 +37,7 @@ private:
     void renderNumber(int number, int row, int col, bool isFixed, bool hasConflict);
     void renderSelectedCell(int row, int col);
     void renderNumberCounts(const Sudoku& sudoku);
+    void renderText(const std::string& text, int x, int y, SDL_Color color);
     std::array<int, 9> calculateNumberCounts(const Sudoku& sudoku) const;
     static SDL_Texture *cachedBackground;
     static SDL_Texture *resetTexture;

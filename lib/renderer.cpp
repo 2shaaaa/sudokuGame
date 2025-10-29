@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "game.h"
 #include <stdexcept>
 #include <array>
 #include <sstream>
@@ -104,6 +105,8 @@ void Renderer::render(const Sudoku& sudoku, int selectedRow, int selectedCol) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_Rect topPadding = {0, 0, WINDOW_WIDTH, 50};
     SDL_RenderFillRect(renderer, &topPadding);
+
+    renderTimer(Game::getElapsedSeconds());
 
     if (selectedRow >= 0 && selectedCol >= 0) {
         renderSelectedCell(selectedRow, selectedCol);
@@ -244,9 +247,7 @@ void Renderer::renderSelectedCell(int row, int col) {
     const int GRID_PIXELS = Sudoku::GRID_SIZE * CELL_SIZE;
     const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
 
-    // SDL_SetRenderDrawColor(renderer, 173, 216, 230, 100); // Light blue with some transparency
     SDL_Rect rowRect = {GRID_START_X, GRID_START_Y + row * CELL_SIZE, GRID_PIXELS, CELL_SIZE};    
-    // SDL_SetRenderDrawColor(renderer, 173, 216, 230, 100); // Light blue with some transparency
     SDL_Rect colRect = {GRID_START_X +col * CELL_SIZE, GRID_START_Y, CELL_SIZE, GRID_PIXELS};
 
     // Highlight the 3x3 subgrid with yet another faint blue
@@ -327,6 +328,34 @@ void Renderer::renderNumberCounts(const Sudoku& sudoku) {
     }
     
     TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+}
+
+void Renderer::renderText(const std::string& text, int x, int y, SDL_Color color) {
+    SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
+    if (!surface) return;
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    if (!texture) return;
+
+    SDL_Rect dstRect;
+    TTF_SizeText(font, text.c_str(), &dstRect.w, &dstRect.h);
+    dstRect.x = x;
+    dstRect.y = y;
+    SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
+    SDL_DestroyTexture(texture);
+}
+
+void Renderer::renderTimer(int elapsedSeconds) {
+    int minutes = elapsedSeconds / 60;
+    int seconds = elapsedSeconds % 60;
+
+    std::ostringstream ss;
+    ss << "Time: " << std::setw(2) << std::setfill('0') << minutes << ":"
+        << std::setw(2) << std::setfill('0') << seconds;
+
+    SDL_Color color = {0, 0, 0, 255}; // Black color for timer
+    renderText(ss.str(), 20, 10, color);
 }
 
 std::array<int, 9> Renderer::calculateNumberCounts(const Sudoku& sudoku) const {

@@ -2,7 +2,9 @@
 #include "renderer.h"
 #include <SDL2/SDL.h>
 
-Game::Game() : running(false), selectedRow(-1), selectedCol(-1) {
+int Game::currentElapsedSeconds = 0;
+
+Game::Game() : running(false), selectedRow(-1), selectedCol(-1), elapsedSeconds(0), startTime(0) {
 }
 
 Game::~Game() {}
@@ -12,6 +14,7 @@ bool Game::init() {
         return false;
     }
     running = true;
+    startTime = SDL_GetTicks();
     return true;
 }
 
@@ -19,6 +22,7 @@ void Game::run() {
     SDL_Event e;
     while (running) {
         handleEvents();
+        updateTimer();
         // If a win was detected during event handling, stop before drawing
         if (!running) break;
         renderer.render(sudoku, selectedRow, selectedCol);
@@ -88,5 +92,13 @@ void Game::checkWinCondition() {
         renderer.renderMessage("Congratulations! You solved the puzzle!");
         SDL_Delay(10000); // Show message for 10 seconds
         running = false;
+    }
+}
+
+void Game::updateTimer() {
+    if (running) {
+        Uint32 currentTime = SDL_GetTicks();
+        elapsedSeconds = (currentTime - startTime) / 1000;
+        currentElapsedSeconds = elapsedSeconds;
     }
 }

@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <SDL2/SDL.h>
 #include "sudoku.h"
 #include "renderer.h"
 
@@ -11,6 +12,7 @@ public:
 
     bool init();
     void run();
+    static int getElapsedSeconds() { return currentElapsedSeconds; }
 
 private: 
     Renderer renderer;
@@ -19,10 +21,15 @@ private:
     int selectedRow;
     int selectedCol;
 
+    Uint32 startTime;
+    int elapsedSeconds;
+    static int currentElapsedSeconds;
+
     void handleEvents();
     void handleMouseClick(int x, int y);
     void handleKeyPress(SDL_Keycode key);
     void checkWinCondition();
+    void updateTimer();
 };
 
 #endif
