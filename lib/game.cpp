@@ -86,12 +86,53 @@ void Game::handleKeyPress(SDL_Keycode key) {
 
 void Game::checkWinCondition() {
     if (sudoku.isSolved()) {
-        // Ensure final board is rendered
-        renderer.render(sudoku, selectedRow, selectedCol);
-        SDL_Delay(100); // small pause so player sees final placement
-        renderer.renderMessage("Congratulations! You solved the puzzle!");
-        SDL_Delay(10000); // Show message for 10 seconds
-        running = false;
+        if (selectedRow >= 0 && selectedCol >= 0) {
+            renderer.completeEffect(sudoku, selectedRow, selectedCol, 1000);
+        } else {
+            // fallback center ripple
+            renderer.completeEffect(sudoku, 4, 4, 1000);
+        }
+
+        bool newGame = false;
+        SDL_Event event;
+        bool shouldClose = false;
+
+        while(!newGame && !shouldClose) {
+            while(SDL_PollEvent(&event)) {
+                switch (event.type) {
+                    case SDL_QUIT:
+                        shouldClose = true;
+                        running = false;
+                        break;
+                    case SDL_MOUSEBUTTONDOWN:
+                        if (event.button.button == SDL_BUTTON_LEFT) {
+                            int action = renderer.handleVictoryScreenClick(event.button.x, event.button.y);
+                            if (action == 1) {
+                                newGame = true;
+                            } else if (action == 2) {
+                                shouldClose = true;
+                                running = false;
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (!shouldClose) {
+                renderer.renderVictoryScreen(elapsedSeconds);
+                SDL_Delay(16);
+            }
+        }
+        if (newGame) {
+            sudoku.generatePuzzle();
+            selectedRow = selectedCol = -1;
+            startTime = SDL_GetTicks();
+            elapsedSeconds = 0;
+            currentElapsedSeconds = 0;
+        } else {
+            running = false;
+        }
     }
 }
 
