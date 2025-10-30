@@ -20,12 +20,14 @@ public:
     bool init();
     // render the whole game
     void render(const Sudoku& sudoku, int selectedRow = -1, int selectedCol = -1);
-    // display win game message
-    void renderMessage(const std::string& message);
     // convert mouse coordinates to grid position / where mousee points to
     void getGridPosition(int mouseX, int mouseY, int& row, int& col);
     void close();
     void renderTimer(int elapsedSeconds);
+    void renderVictoryScreen(int elapsedSeconds);
+    // Animate a ripple effect originating from a cell (row,col) over the grid
+    void completeEffect(const Sudoku& sudoku, int originRow, int originCol, int durationMs = 1200);
+    int handleVictoryScreenClick(int mouseX, int mouseY);
     
 private:
     SDL_Window* window;
@@ -39,6 +41,7 @@ private:
     void renderNumberCounts(const Sudoku& sudoku);
     void renderText(const std::string& text, int x, int y, SDL_Color color);
     std::array<int, 9> calculateNumberCounts(const Sudoku& sudoku) const;
+
     static SDL_Texture *cachedBackground;
     static SDL_Texture *resetTexture;
 
