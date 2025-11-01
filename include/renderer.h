@@ -21,13 +21,15 @@ public:
     // render the whole game
     void render(const Sudoku& sudoku, int selectedRow = -1, int selectedCol = -1);
     // convert mouse coordinates to grid position / where mousee points to
-    void getGridPosition(int mouseX, int mouseY, int& row, int& col);
+    void getGridPosition(int x, int y, int& row, int& col);
     void close();
     void renderTimer(int elapsedSeconds);
     void renderVictoryScreen(int elapsedSeconds);
+    void renderMenuScreen();
     // Animate a ripple effect originating from a cell (row,col) over the grid
     void completeEffect(const Sudoku& sudoku, int originRow, int originCol, int durationMs = 1200);
-    int handleVictoryScreenClick(int mouseX, int mouseY);
+    int handleVictoryScreenClick(int x, int y);
+    bool handleMenuClick(int x, int y);
     
 private:
     SDL_Window* window;

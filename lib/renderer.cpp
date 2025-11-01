@@ -209,12 +209,12 @@ void Renderer::renderNumber(int number, int row, int col, bool isFixed, bool has
     SDL_DestroyTexture(texture);
 }
 
-void Renderer::getGridPosition(int mouseX, int mouseY, int &row, int &col) {
+void Renderer::getGridPosition(int x, int y, int &row, int &col) {
     const int GRID_START_Y = 50;
     const int GRID_PIXELS = Sudoku::GRID_SIZE * CELL_SIZE;
     const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
-    row = (mouseY - GRID_START_Y) / CELL_SIZE;
-    col = (mouseX - GRID_START_X) / CELL_SIZE;
+    row = (y - GRID_START_Y) / CELL_SIZE;
+    col = (x - GRID_START_X) / CELL_SIZE;
 
     // Clamp values to be within grid bounds
     if (row < 0) row = 0;
@@ -366,8 +366,9 @@ void Renderer::renderVictoryScreen(int elapsedSeconds) {
     TTF_SizeText(font, timeStr.c_str(), &timeW, &timeH);
     renderText(timeStr, (WINDOW_WIDTH - timeW) / 2, (WINDOW_HEIGHT + timeH) / 3 + 5, {255, 255, 255, 255});
 
-    //Render buttons
-    SDL_Color btnColor = {99, 108, 203, 255}; // BLue button
+    // Render buttons with hover effect
+    SDL_Color btnColor = {99, 108, 203, 255}; // Base blue button
+    SDL_Color hoverColor = {79, 129, 255, 255}; // Lighter blue on hover
     const int margin = 200;
     const int buttonWidth = WINDOW_WIDTH - margin * 2;
     const int buttonHeight = 60;
@@ -375,22 +376,71 @@ void Renderer::renderVictoryScreen(int elapsedSeconds) {
     const int xPos = margin;
     const int yStart = WINDOW_HEIGHT / 2 + 20;
 
+    // Layout three buttons: Play Again, Main Menu, Exit
     SDL_Rect newGameBtn = { xPos, yStart, buttonWidth, buttonHeight };
-    SDL_Rect exitBtn = { xPos, yStart + buttonHeight + gap, buttonWidth, buttonHeight };
+    SDL_Rect mainMenuBtn = { xPos, yStart + (buttonHeight + gap), buttonWidth, buttonHeight };
+    SDL_Rect exitBtn = { xPos, yStart + 2 * (buttonHeight + gap), buttonWidth, buttonHeight };
 
-    SDL_SetRenderDrawColor(renderer, btnColor.r, btnColor.g, btnColor.b, btnColor.a);
-    SDL_RenderFillRect(renderer, &newGameBtn);
-    SDL_RenderFillRect(renderer, &exitBtn);
+    // Get mouse position to determine hover
+    int mouseX, mouseY;
+    Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+    bool hoverNew = (mouseX >= newGameBtn.x && mouseX <= newGameBtn.x + newGameBtn.w && mouseY >= newGameBtn.y && mouseY <= newGameBtn.y + newGameBtn.h);
+    bool hoverMain = (mouseX >= mainMenuBtn.x && mouseX <= mainMenuBtn.x + mainMenuBtn.w && mouseY >= mainMenuBtn.y && mouseY <= mainMenuBtn.y + mainMenuBtn.h);
+    bool hoverExit = (mouseX >= exitBtn.x && mouseX <= exitBtn.x + exitBtn.w && mouseY >= exitBtn.y && mouseY <= exitBtn.y + exitBtn.h);
 
-    // Center text inside buttons
+    // Draw shadows for buttons
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 60);
+    SDL_Rect newShadow = { newGameBtn.x + 3, newGameBtn.y + 3, newGameBtn.w, newGameBtn.h };
+    SDL_Rect mainShadow = { mainMenuBtn.x + 3, mainMenuBtn.y + 3, mainMenuBtn.w, mainMenuBtn.h };
+    SDL_Rect exitShadow = { exitBtn.x + 3, exitBtn.y + 3, exitBtn.w, exitBtn.h };
+    SDL_RenderFillRect(renderer, &newShadow);
+    SDL_RenderFillRect(renderer, &mainShadow);
+    SDL_RenderFillRect(renderer, &exitShadow);
+
+    // Draw button bodies (slightly lift hovered button)
+    SDL_Rect newBody = newGameBtn;
+    SDL_Rect mainBody = mainMenuBtn;
+    SDL_Rect exitBody = exitBtn;
+    if (hoverNew) newBody.y -= 2; // lift up on hover
+    if (hoverMain) mainBody.y -= 2;
+    if (hoverExit) exitBody.y -= 2;
+
+    SDL_Color fillNew = hoverNew ? hoverColor : btnColor;
+    SDL_Color fillMain = hoverMain ? hoverColor : btnColor;
+    SDL_Color fillExit = hoverExit ? hoverColor : btnColor;
+
+    SDL_SetRenderDrawColor(renderer, fillNew.r, fillNew.g, fillNew.b, fillNew.a);
+    SDL_RenderFillRect(renderer, &newBody);
+    SDL_SetRenderDrawColor(renderer, fillMain.r, fillMain.g, fillMain.b, fillMain.a);
+    SDL_RenderFillRect(renderer, &mainBody);
+    SDL_SetRenderDrawColor(renderer, fillExit.r, fillExit.g, fillExit.b, fillExit.a);
+    SDL_RenderFillRect(renderer, &exitBody);
+
+    // Draw borders (highlight when hovered)
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 120);
+    if (hoverNew) SDL_RenderDrawRect(renderer, &newBody);
+    if (hoverMain) SDL_RenderDrawRect(renderer, &mainBody);
+    if (hoverExit) SDL_RenderDrawRect(renderer, &exitBody);
+
+    // Center text inside buttons and adjust style on hover
     int tw, th;
     std::string newStr = "Play Again";
     TTF_SizeText(font, newStr.c_str(), &tw, &th);
-    renderText(newStr, newGameBtn.x + (newGameBtn.w - tw) / 2, newGameBtn.y + (newGameBtn.h - th) / 2, {255, 255, 255, 255});
+    if (hoverNew) TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    renderText(newStr, newBody.x + (newBody.w - tw) / 2, newBody.y + (newBody.h - th) / 2, {255, 255, 255, 255});
+    if (hoverNew) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+
+    std::string mainStr = "Main Menu";
+    TTF_SizeText(font, mainStr.c_str(), &tw, &th);
+    if (hoverMain) TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    renderText(mainStr, mainBody.x + (mainBody.w - tw) / 2, mainBody.y + (mainBody.h - th) / 2, {255, 255, 255, 255});
+    if (hoverMain) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
 
     std::string exitStr = "Exit";
     TTF_SizeText(font, exitStr.c_str(), &tw, &th);
-    renderText(exitStr, exitBtn.x + (exitBtn.w - tw) / 2, exitBtn.y + (exitBtn.h - th) / 2, {255, 255, 255, 255});
+    if (hoverExit) TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    renderText(exitStr, exitBody.x + (exitBody.w - tw) / 2, exitBody.y + (exitBody.h - th) / 2, {255, 255, 255, 255});
+    if (hoverExit) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
 
     // Present once
     SDL_RenderPresent(renderer);
@@ -405,7 +455,8 @@ int Renderer::handleVictoryScreenClick(int x, int y) {
     const int xPos = margin;
     const int yStart = WINDOW_HEIGHT / 2 + 20;
     SDL_Rect newGameBtn = { xPos, yStart, buttonWidth, buttonHeight };
-    SDL_Rect exitBtn = { xPos, yStart + buttonHeight + gap, buttonWidth, buttonHeight };
+    SDL_Rect mainMenuBtn = { xPos, yStart + (buttonHeight + gap), buttonWidth, buttonHeight };
+    SDL_Rect exitBtn = { xPos, yStart + 2 * (buttonHeight + gap), buttonWidth, buttonHeight };
 
     // New Game button
     if (x >= newGameBtn.x && x <= newGameBtn.x + newGameBtn.w &&
@@ -413,13 +464,122 @@ int Renderer::handleVictoryScreenClick(int x, int y) {
         return 1;  // New Game clicked
     }
 
+    // Main Menu button
+    if (x >= mainMenuBtn.x && x <= mainMenuBtn.x + mainMenuBtn.w &&
+        y >= mainMenuBtn.y && y <= mainMenuBtn.y + mainMenuBtn.h) {
+        return 2;  // Main Menu clicked
+    }
+
     // Exit button
     if (x >= exitBtn.x && x <= exitBtn.x + exitBtn.w &&
         y >= exitBtn.y && y <= exitBtn.y + exitBtn.h) {
-        return 2;  // Exit clicked
+        return 3;  // Exit clicked
     }
 
     return 0; // No action
+}
+
+void Renderer::renderMenuScreen() {
+    // Clear the screen with white background
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
+
+    // Set font style and size for the title
+    TTF_Font* titleFont = TTF_OpenFont("/System/Library/Fonts/Supplemental/Comic Sans MS.ttf", 72);
+    TTF_SetFontStyle(titleFont, TTF_STYLE_BOLD);
+    SDL_Color titleColor = {0, 0, 0, 255}; // Black color for title
+    
+    // Render SUDOKU title with larger font
+    SDL_Surface* surface = TTF_RenderText_Blended(titleFont, "sUdOkU", titleColor);
+    if (surface) {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        if (texture) {
+            SDL_Rect destRect;
+            TTF_SizeText(titleFont, "sUdOkU", &destRect.w, &destRect.h);
+            destRect.x = WINDOW_WIDTH / 2 - destRect.w / 2;
+            destRect.y = WINDOW_HEIGHT / 3 - destRect.h / 2;
+            SDL_RenderCopy(renderer, texture, NULL, &destRect);
+            SDL_DestroyTexture(texture);
+        }
+        SDL_FreeSurface(surface);
+    }
+    TTF_CloseFont(titleFont);
+
+    // Set font style and size for the subtitle
+    TTF_Font* subtitleFont = TTF_OpenFont("/System/Library/Fonts/Supplemental/Comic Sans MS.ttf", 16);
+    TTF_SetFontStyle(subtitleFont, TTF_STYLE_ITALIC);
+    SDL_Color subtitleColor = {128, 128, 128, 255}; // Gray color for subtitle
+    
+    // Render subtitle with smaller font
+    surface = TTF_RenderText_Blended(subtitleFont, "Made by TuSha", subtitleColor);
+    if (surface) {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        if (texture) {
+            SDL_Rect destRect;
+            TTF_SizeText(subtitleFont, "Made by TuSha", &destRect.w, &destRect.h);
+            destRect.x = WINDOW_WIDTH / 2 - destRect.w / 2;
+            destRect.y = WINDOW_HEIGHT / 3 + 60;
+            SDL_RenderCopy(renderer, texture, NULL, &destRect);
+            SDL_DestroyTexture(texture);
+        }
+        SDL_FreeSurface(surface);
+    }
+    TTF_CloseFont(subtitleFont);
+
+    // Reset font style for the button
+    TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+
+    // Render start button with the same style as victory screen buttons
+    SDL_Rect startBtn = {WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 + 50, 200, 40};
+
+    // Get mouse state for hover effect
+    int mouseX, mouseY;
+    Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+    bool isHovered = (mouseX >= startBtn.x && mouseX <= startBtn.x + startBtn.w &&
+                     mouseY >= startBtn.y && mouseY <= startBtn.y + startBtn.h);
+    bool isClicked = isHovered && (mouseState & SDL_BUTTON_LMASK);
+
+    // Button shadow
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 60);
+    SDL_Rect btnShadow = {startBtn.x + 2, startBtn.y + 2, startBtn.w, startBtn.h};
+    SDL_RenderFillRect(renderer, &btnShadow);
+
+    // Button body with interaction effects
+    SDL_Rect buttonRect = startBtn;
+    if (isHovered) {
+        if (isClicked) {
+            buttonRect.x += 2;
+            buttonRect.y += 2;
+        } else {
+            buttonRect.x += 1;
+            buttonRect.y += 1;
+        }
+    }
+
+    // Button colors based on state
+    SDL_SetRenderDrawColor(renderer, 0,
+        isHovered ? (isClicked ? 80 : 100) : 128,
+        0, 255);
+    SDL_RenderFillRect(renderer, &buttonRect);
+
+    // Button border
+    SDL_SetRenderDrawColor(renderer, 0, 200, 0, 255);
+    SDL_RenderDrawRect(renderer, &buttonRect);
+
+    // Button text
+    SDL_Color white = {255, 255, 255, 255};
+    renderText("Start Game",
+              WINDOW_WIDTH / 2 - 50 + (isHovered ? (isClicked ? 3 : 1) : 0),
+              WINDOW_HEIGHT / 2 + 60 + (isHovered ? (isClicked ? 3 : 1) : 0),
+              white);
+
+    SDL_RenderPresent(renderer);
+}
+
+bool Renderer::handleMenuClick(int x, int y) {
+    SDL_Rect startBtn = {WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 + 50, 200, 40};
+    return (x >= startBtn.x && x <= startBtn.x + startBtn.w &&
+            y >= startBtn.y && y <= startBtn.y + startBtn.h);
 }
 
 std::array<int, 9> Renderer::calculateNumberCounts(const Sudoku& sudoku) const {
