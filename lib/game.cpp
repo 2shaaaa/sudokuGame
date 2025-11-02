@@ -5,6 +5,7 @@
 int Game::currentElapsedSeconds = 0;
 
 Game::Game() : running(false), state(GameState::MENU), selectedRow(-1), selectedCol(-1), elapsedSeconds(0), startTime(0) {
+    difficulty = 2; // default Medium
 }
 
 Game::~Game() {}
@@ -28,6 +29,8 @@ void Game::run() {
         if (running) {
             if (state == GameState::MENU) {
                 renderer.renderMenuScreen();
+            } else if (state == GameState::DIFFICULTY) {
+                renderer.renderDifficultyScreen();
             } else if (state == GameState::PLAYING) {
                 renderer.render(sudoku, selectedRow, selectedCol);
             }
@@ -39,8 +42,7 @@ void Game::run() {
 
 bool Game::handleMenuClick(int x, int y) {
     if (renderer.handleMenuClick(x, y)) {
-        state = GameState::PLAYING;
-        startTime = SDL_GetTicks();
+        state = GameState::DIFFICULTY;
         return true;
     }
     return false;
@@ -72,7 +74,18 @@ void Game::handleMouseClick(int x, int y) {
         handleMenuClick(x, y);
         return;
     }
-    
+    if (state == GameState::DIFFICULTY) {
+        int choice = renderer.handleDifficultyClick(x, y);
+        if (choice >= 1 && choice <= 3) {
+            difficulty = choice;
+            // Generate puzzle for chosen difficulty
+            sudoku.generatePuzzle(difficulty);
+            selectedRow = selectedCol = -1;
+            state = GameState::PLAYING;
+            startTime = SDL_GetTicks();
+        }
+        return;
+    }
     int newRow, newCol;
     renderer.getGridPosition(x, y, newRow, newCol);
     // Toggle selection if clicking the same cell
@@ -99,7 +112,10 @@ void Game::handleKeyPress(SDL_Keycode key) {
     } else if (key == SDLK_BACKSPACE || key == SDLK_DELETE || key == SDLK_0) {
         sudoku.setNumber(selectedRow, selectedCol, 0);
     } else if (key == SDLK_r) {
-        sudoku.generatePuzzle();
+        sudoku.generatePuzzle(difficulty);
+        startTime = SDL_GetTicks();
+        elapsedSeconds = 0;
+        currentElapsedSeconds = 0;
         selectedRow = selectedCol = -1;
     }
 }
@@ -138,8 +154,9 @@ void Game::checkWinCondition() {
                 SDL_Delay(16);
             }
         }
-        if (action == 1) {  // New Game
-            sudoku = Sudoku();
+        if (action == 1) {  // New Game 
+            sudoku.generatePuzzle(difficulty);
+            state = GameState::PLAYING;
             selectedRow = selectedCol = -1;
             startTime = SDL_GetTicks();
             elapsedSeconds = 0;

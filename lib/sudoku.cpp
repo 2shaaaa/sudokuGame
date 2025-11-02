@@ -4,10 +4,14 @@
 Sudoku::Sudoku() : grid(GRID_SIZE, std::vector<int>(GRID_SIZE, 0)),
                    fixed(GRID_SIZE, std::vector<bool>(GRID_SIZE, false)) {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
-    generatePuzzle();
+    generatePuzzle(2); // default to Medium
 }
 
 void Sudoku::generatePuzzle() {
+    generatePuzzle(2);
+}
+
+void Sudoku::generatePuzzle(int difficulty) {
     // Start with an empty grid
     for(auto& row : grid) {
         std::fill(row.begin(), row.end(), 0);
@@ -38,7 +42,20 @@ void Sudoku::generatePuzzle() {
         std::fill(row.begin(), row.end(), true);
     }
 
-    removeCells();
+    // Determine how many cells to remove based on difficulty
+    int cellsToRemove = 0;
+    if (difficulty <= 1) {
+        // Easy: fewer removals (more clues)
+        cellsToRemove = 1; //36 + (std::rand() % 9); // 36..44
+    } else if (difficulty == 2) {
+        // Medium: previous behavior
+        cellsToRemove = 2; //45 + (std::rand() % 11); // 45..55
+    } else {
+        // Hard: more removals (fewer clues)
+        cellsToRemove = 3; //56 + (std::rand() % 5); // 56..60
+    }
+
+    removeCells(cellsToRemove);
 }
 
 bool Sudoku::isValid(int row, int col, int num) const {
@@ -143,12 +160,16 @@ bool Sudoku::solveGrid() {
 }
 
 void Sudoku::removeCells() {
-    // Remove about 50-60 numbers
+    // Backwards-compatible default behavior: medium
     int cellsToRemove = 45 + (std::rand() % 11);
+    removeCells(cellsToRemove);
+}
+
+void Sudoku::removeCells(int cellsToRemove) {
     while (cellsToRemove > 0) {
         int row = std::rand() % GRID_SIZE;
         int col = std::rand() % GRID_SIZE;
-        
+
         if (grid[row][col] != 0) {
             grid[row][col] = 0;
             fixed[row][col] = false;

@@ -7,6 +7,7 @@
 
 enum class GameState {
     MENU,
+    DIFFICULTY,
     PLAYING,
     VICTORY
 };
@@ -23,6 +24,7 @@ public:
 private: 
     Renderer renderer;
     Sudoku sudoku;
+    int difficulty; 
     bool running;
     GameState state;
     int selectedRow;

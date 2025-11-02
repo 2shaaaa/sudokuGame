@@ -10,9 +10,9 @@
 
 
 SDL_Texture* Renderer::cachedBackground = nullptr;  // Define static member
-SDL_Texture *Renderer::resetTexture = nullptr;
+SDL_Texture *Renderer::iconTexture = nullptr;
 
-Renderer::Renderer() : window(nullptr), renderer(nullptr), font(nullptr) {}
+Renderer::Renderer() : window(nullptr), renderer(nullptr), font(nullptr), icon(nullptr) {}
 
 Renderer::~Renderer() {
     if (cachedBackground)
@@ -20,10 +20,10 @@ Renderer::~Renderer() {
         SDL_DestroyTexture(cachedBackground);
         cachedBackground = nullptr;
     }
-    if (resetTexture)
+    if (iconTexture)
     {
-        SDL_DestroyTexture(resetTexture);
-        resetTexture = nullptr;
+        SDL_DestroyTexture(iconTexture);
+        iconTexture = nullptr;
     }
     close();
 }
@@ -67,14 +67,19 @@ bool Renderer::init() {
         return false;
     }
 
-    if(!IMG_Init(IMG_INIT_PNG)) {
-        std::cerr << "IMG_Init failed: " << IMG_GetError() << std::endl;
-        TTF_CloseFont(font);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        TTF_Quit();
-        SDL_Quit();
-        return false;
+    icon = IMG_Load("/Users/tusha/Documents/GitHub/sudokuGame/image/menu_icon.png");
+    if (icon) {
+        // create texture once and free the surface
+        iconTexture = SDL_CreateTextureFromSurface(renderer, icon);
+        SDL_FreeSurface(icon);
+        icon = nullptr;
+        if (!iconTexture) {
+            std::cerr << "Failed to create icon texture: " << SDL_GetError() << std::endl;
+        }
+    } else {
+        // image missing - log but continue without failing
+        std::cerr << "Failed to load menu icon: " << IMG_GetError() << std::endl;
+        icon = nullptr;
     }
 
     return true;
@@ -374,7 +379,7 @@ void Renderer::renderVictoryScreen(int elapsedSeconds) {
     const int buttonHeight = 60;
     const int gap = 20;
     const int xPos = margin;
-    const int yStart = WINDOW_HEIGHT / 2 + 20;
+    const int yStart = WINDOW_HEIGHT / 2 - 40;
 
     // Layout three buttons: Play Again, Main Menu, Exit
     SDL_Rect newGameBtn = { xPos, yStart, buttonWidth, buttonHeight };
@@ -453,7 +458,7 @@ int Renderer::handleVictoryScreenClick(int x, int y) {
     const int buttonHeight = 60;
     const int gap = 20;
     const int xPos = margin;
-    const int yStart = WINDOW_HEIGHT / 2 + 20;
+    const int yStart = WINDOW_HEIGHT / 2 - 40;
     SDL_Rect newGameBtn = { xPos, yStart, buttonWidth, buttonHeight };
     SDL_Rect mainMenuBtn = { xPos, yStart + (buttonHeight + gap), buttonWidth, buttonHeight };
     SDL_Rect exitBtn = { xPos, yStart + 2 * (buttonHeight + gap), buttonWidth, buttonHeight };
@@ -484,10 +489,17 @@ void Renderer::renderMenuScreen() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
 
-    // Set font style and size for the title
+    // Draw a semi-transparent overlay for the menu screen
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 158, 198, 243, 100);
+    SDL_Rect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderFillRect(renderer, &overlay);
+
+    // Title at top
     TTF_Font* titleFont = TTF_OpenFont("/System/Library/Fonts/Supplemental/Comic Sans MS.ttf", 72);
     TTF_SetFontStyle(titleFont, TTF_STYLE_BOLD);
-    SDL_Color titleColor = {0, 0, 0, 255}; // Black color for title
+    // Use the same title color as the victory screen for visual consistency
+    SDL_Color titleColor = {99, 108, 203, 255}; // Victory-screen purple-blue
     
     // Render SUDOKU title with larger font
     SDL_Surface* surface = TTF_RenderText_Blended(titleFont, "sUdOkU", titleColor);
@@ -497,15 +509,15 @@ void Renderer::renderMenuScreen() {
             SDL_Rect destRect;
             TTF_SizeText(titleFont, "sUdOkU", &destRect.w, &destRect.h);
             destRect.x = WINDOW_WIDTH / 2 - destRect.w / 2;
-            destRect.y = WINDOW_HEIGHT / 3 - destRect.h / 2;
+            destRect.y = WINDOW_HEIGHT / 4 - destRect.h;
             SDL_RenderCopy(renderer, texture, NULL, &destRect);
             SDL_DestroyTexture(texture);
         }
         SDL_FreeSurface(surface);
-    }
-    TTF_CloseFont(titleFont);
+        }
+        TTF_CloseFont(titleFont);
 
-    // Set font style and size for the subtitle
+            // Set font style and size for the subtitle
     TTF_Font* subtitleFont = TTF_OpenFont("/System/Library/Fonts/Supplemental/Comic Sans MS.ttf", 16);
     TTF_SetFontStyle(subtitleFont, TTF_STYLE_ITALIC);
     SDL_Color subtitleColor = {128, 128, 128, 255}; // Gray color for subtitle
@@ -518,7 +530,7 @@ void Renderer::renderMenuScreen() {
             SDL_Rect destRect;
             TTF_SizeText(subtitleFont, "Made by TuSha", &destRect.w, &destRect.h);
             destRect.x = WINDOW_WIDTH / 2 - destRect.w / 2;
-            destRect.y = WINDOW_HEIGHT / 3 + 60;
+            destRect.y = WINDOW_HEIGHT / 4 - destRect.h / 2;
             SDL_RenderCopy(renderer, texture, NULL, &destRect);
             SDL_DestroyTexture(texture);
         }
@@ -529,8 +541,17 @@ void Renderer::renderMenuScreen() {
     // Reset font style for the button
     TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
 
+    // Game icon in center
+    const int IMG_SIZE = 350;
+    int imgX = WINDOW_WIDTH/2 - IMG_SIZE/2;
+    int imgY = WINDOW_HEIGHT/2 - IMG_SIZE/2 - 20;
+    if (iconTexture) {
+        SDL_Rect dst = { imgX, imgY, IMG_SIZE, IMG_SIZE };
+        SDL_RenderCopy(renderer, iconTexture, NULL, &dst);
+    }
+
     // Render start button with the same style as victory screen buttons
-    SDL_Rect startBtn = {WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 + 50, 200, 40};
+    SDL_Rect startBtn = {WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 + 150, 200, 40};
 
     // Get mouse state for hover effect
     int mouseX, mouseY;
@@ -539,47 +560,148 @@ void Renderer::renderMenuScreen() {
                      mouseY >= startBtn.y && mouseY <= startBtn.y + startBtn.h);
     bool isClicked = isHovered && (mouseState & SDL_BUTTON_LMASK);
 
-    // Button shadow
+    // Button shadow (same as victory screen)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 60);
-    SDL_Rect btnShadow = {startBtn.x + 2, startBtn.y + 2, startBtn.w, startBtn.h};
+    SDL_Rect btnShadow = {startBtn.x + 3, startBtn.y + 3, startBtn.w, startBtn.h};
     SDL_RenderFillRect(renderer, &btnShadow);
 
-    // Button body with interaction effects
+    // Button body with interaction effects (lift on hover)
     SDL_Rect buttonRect = startBtn;
-    if (isHovered) {
-        if (isClicked) {
-            buttonRect.x += 2;
-            buttonRect.y += 2;
-        } else {
-            buttonRect.x += 1;
-            buttonRect.y += 1;
-        }
-    }
+    if (isHovered) buttonRect.y -= 2; // same gentle lift as victory
 
-    // Button colors based on state
-    SDL_SetRenderDrawColor(renderer, 0,
-        isHovered ? (isClicked ? 80 : 100) : 128,
-        0, 255);
+    // Colors matching victory screen
+    SDL_Color btnColor = {99, 108, 203, 255}; // base
+    SDL_Color hoverColor = {79, 129, 255, 255}; // hover
+    SDL_Color fill = isHovered ? hoverColor : btnColor;
+
+    SDL_SetRenderDrawColor(renderer, fill.r, fill.g, fill.b, fill.a);
     SDL_RenderFillRect(renderer, &buttonRect);
 
-    // Button border
-    SDL_SetRenderDrawColor(renderer, 0, 200, 0, 255);
+    // Button border: show a light highlight when hovered
+    if (isHovered) {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 120);
+    } else {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 60);
+    }
     SDL_RenderDrawRect(renderer, &buttonRect);
 
-    // Button text
+    // Button text (bold when hovered)
     SDL_Color white = {255, 255, 255, 255};
+    if (isHovered) TTF_SetFontStyle(font, TTF_STYLE_BOLD);
     renderText("Start Game",
-              WINDOW_WIDTH / 2 - 50 + (isHovered ? (isClicked ? 3 : 1) : 0),
-              WINDOW_HEIGHT / 2 + 60 + (isHovered ? (isClicked ? 3 : 1) : 0),
+              buttonRect.x + (buttonRect.w - 100) / 2,
+              buttonRect.y + (buttonRect.h - 24) / 2,
               white);
+    if (isHovered) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
 
     SDL_RenderPresent(renderer);
 }
 
 bool Renderer::handleMenuClick(int x, int y) {
-    SDL_Rect startBtn = {WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 + 50, 200, 40};
+    SDL_Rect startBtn = {WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 + 150, 200, 40};
     return (x >= startBtn.x && x <= startBtn.x + startBtn.w &&
             y >= startBtn.y && y <= startBtn.y + startBtn.h);
+}
+
+void Renderer::renderDifficultyScreen() {
+    // Clear the screen
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
+
+    // Semi-transparent overlay
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 158, 198, 243, 100);
+    SDL_Rect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderFillRect(renderer, &overlay);
+
+    // Title
+    TTF_Font* titleFont = TTF_OpenFont("/System/Library/Fonts/Supplemental/Comic Sans MS.ttf", 48);
+    SDL_Color titleColor = {0, 0, 0, 255};
+    if (titleFont) {
+        SDL_Surface* surface = TTF_RenderText_Blended(titleFont, "Select Difficulty", titleColor);
+        if (surface) {
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+            if (texture) {
+                SDL_Rect destRect;
+                TTF_SizeText(titleFont, "Select Difficulty", &destRect.w, &destRect.h);
+                destRect.x = WINDOW_WIDTH / 2 - destRect.w / 2;
+                destRect.y = WINDOW_HEIGHT / 4 - destRect.h / 2;
+                SDL_RenderCopy(renderer, texture, NULL, &destRect);
+                SDL_DestroyTexture(texture);
+            }
+            SDL_FreeSurface(surface);
+        }
+        TTF_CloseFont(titleFont);
+    }
+
+    // Three difficulty buttons
+    const int btnW = 220;
+    const int btnH = 50;
+    const int gap = 20;
+    const int totalH = btnH * 3 + gap * 2;
+    const int startY = WINDOW_HEIGHT / 2 - totalH / 2;
+    const int xPos = WINDOW_WIDTH / 2 - btnW / 2;
+
+    SDL_Rect easyBtn = { xPos, startY, btnW, btnH };
+    SDL_Rect medBtn = { xPos, startY + btnH + gap, btnW, btnH };
+    SDL_Rect hardBtn = { xPos, startY + 2*(btnH + gap), btnW, btnH };
+
+    int mouseX, mouseY;
+    Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+    bool hoverEasy = (mouseX >= easyBtn.x && mouseX <= easyBtn.x + easyBtn.w && mouseY >= easyBtn.y && mouseY <= easyBtn.y + easyBtn.h);
+    bool hoverMed = (mouseX >= medBtn.x && mouseX <= medBtn.x + medBtn.w && mouseY >= medBtn.y && mouseY <= medBtn.y + medBtn.h);
+    bool hoverHard = (mouseX >= hardBtn.x && mouseX <= hardBtn.x + hardBtn.w && mouseY >= hardBtn.y && mouseY <= hardBtn.y + hardBtn.h);
+
+    // Shadows
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 60);
+    SDL_Rect s1 = { easyBtn.x + 3, easyBtn.y + 3, easyBtn.w, easyBtn.h };
+    SDL_Rect s2 = { medBtn.x + 3, medBtn.y + 3, medBtn.w, medBtn.h };
+    SDL_Rect s3 = { hardBtn.x + 3, hardBtn.y + 3, hardBtn.w, hardBtn.h };
+    SDL_RenderFillRect(renderer, &s1);
+    SDL_RenderFillRect(renderer, &s2);
+    SDL_RenderFillRect(renderer, &s3);
+
+    SDL_Color base = {99, 108, 203, 255};
+    SDL_Color hover = {79, 129, 255, 255};
+
+    SDL_Rect b1 = easyBtn, b2 = medBtn, b3 = hardBtn;
+    if (hoverEasy) b1.y -= 2;
+    if (hoverMed) b2.y -= 2;
+    if (hoverHard) b3.y -= 2;
+
+    SDL_SetRenderDrawColor(renderer, (hoverEasy?hover.r:base.r), (hoverEasy?hover.g:base.g), (hoverEasy?hover.b:base.b), 255);
+    SDL_RenderFillRect(renderer, &b1);
+    SDL_SetRenderDrawColor(renderer, (hoverMed?hover.r:base.r), (hoverMed?hover.g:base.g), (hoverMed?hover.b:base.b), 255);
+    SDL_RenderFillRect(renderer, &b2);
+    SDL_SetRenderDrawColor(renderer, (hoverHard?hover.r:base.r), (hoverHard?hover.g:base.g), (hoverHard?hover.b:base.b), 255);
+    SDL_RenderFillRect(renderer, &b3);
+
+    // Button text
+    TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    renderText("Easy", b1.x + (b1.w/2) - 24, b1.y + (b1.h/2) - 12, {255,255,255,255});
+    renderText("Medium", b2.x + (b2.w/2) - 36, b2.y + (b2.h/2) - 12, {255,255,255,255});
+    renderText("Hard", b3.x + (b3.w/2) - 24, b3.y + (b3.h/2) - 12, {255,255,255,255});
+    TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+
+    SDL_RenderPresent(renderer);
+}
+
+int Renderer::handleDifficultyClick(int x, int y) {
+    const int btnW = 220;
+    const int btnH = 50;
+    const int gap = 20;
+    const int totalH = btnH * 3 + gap * 2;
+    const int startY = WINDOW_HEIGHT / 2 - totalH / 2;
+    const int xPos = WINDOW_WIDTH / 2 - btnW / 2;
+
+    SDL_Rect easyBtn = { xPos, startY, btnW, btnH };
+    SDL_Rect medBtn = { xPos, startY + btnH + gap, btnW, btnH };
+    SDL_Rect hardBtn = { xPos, startY + 2*(btnH + gap), btnW, btnH };
+
+    if (x >= easyBtn.x && x <= easyBtn.x + easyBtn.w && y >= easyBtn.y && y <= easyBtn.y + easyBtn.h) return 1;
+    if (x >= medBtn.x && x <= medBtn.x + medBtn.w && y >= medBtn.y && y <= medBtn.y + medBtn.h) return 2;
+    if (x >= hardBtn.x && x <= hardBtn.x + hardBtn.w && y >= hardBtn.y && y <= hardBtn.y + hardBtn.h) return 3;
+    return 0;
 }
 
 std::array<int, 9> Renderer::calculateNumberCounts(const Sudoku& sudoku) const {
