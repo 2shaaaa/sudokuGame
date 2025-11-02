@@ -49,7 +49,6 @@ private:
     void renderText(const std::string& text, int x, int y, SDL_Color color);
     std::array<int, 9> calculateNumberCounts(const Sudoku& sudoku) const;
 
-    static SDL_Texture *cachedBackground;
     static SDL_Texture *iconTexture;
 
 };

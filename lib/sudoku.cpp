@@ -3,12 +3,8 @@
 
 Sudoku::Sudoku() : grid(GRID_SIZE, std::vector<int>(GRID_SIZE, 0)),
                    fixed(GRID_SIZE, std::vector<bool>(GRID_SIZE, false)) {
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    std::srand(static_cast<unsigned int>(std::time(nullptr))); // Seed for randomness
     generatePuzzle(2); // default to Medium
-}
-
-void Sudoku::generatePuzzle() {
-    generatePuzzle(2);
 }
 
 void Sudoku::generatePuzzle(int difficulty) {
@@ -22,6 +18,7 @@ void Sudoku::generatePuzzle(int difficulty) {
 
     // Fill diagonal subgrids
     for (int box = 0; box < GRID_SIZE; box += SUBGRID_SIZE) {
+        // Generate random permutation of numbers 1-9
         std::vector<int> nums(GRID_SIZE);
         std::iota(nums.begin(), nums.end(), 1);
         std::random_device rd;
@@ -117,19 +114,19 @@ bool Sudoku::isSolved() const {
     }
 
     // Check each 3x3 box
-    for (int boxRow = 0; boxRow < GRID_SIZE; boxRow += SUBGRID_SIZE) {
-        for (int boxCol = 0; boxCol < GRID_SIZE; boxCol += SUBGRID_SIZE) {
-            std::vector<bool> seen(GRID_SIZE + 1, false);
-            for (int i = 0; i < SUBGRID_SIZE; i++) {
-                for (int j = 0; j < SUBGRID_SIZE; j++) {
-                    int num = grid[boxRow + i][boxCol + j];
-                    if (seen[num]) return false;
-                    seen[num] = true;
-                }
-            }
+    for (int box = 0; box < 9; ++box) {
+        bool seen[10] = {false};
+        int startRow = (box / 3) * 3;
+        int startCol = (box % 3) * 3;
+        for (int i = 0; i < 9; ++i) {
+            int row = startRow + i / 3;
+            int col = startCol + i % 3;
+            int num = grid[row][col];
+            if (num == 0) continue;
+            if (seen[num]) return false;
+            seen[num] = true;
         }
     }
-
     return true;
 }
 
@@ -157,12 +154,6 @@ bool Sudoku::solveGrid() {
         }
     }
     return false;
-}
-
-void Sudoku::removeCells() {
-    // Backwards-compatible default behavior: medium
-    int cellsToRemove = 45 + (std::rand() % 11);
-    removeCells(cellsToRemove);
 }
 
 void Sudoku::removeCells(int cellsToRemove) {

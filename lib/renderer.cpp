@@ -9,17 +9,11 @@
 #include <SDL_image.h>
 
 
-SDL_Texture* Renderer::cachedBackground = nullptr;  // Define static member
 SDL_Texture *Renderer::iconTexture = nullptr;
 
 Renderer::Renderer() : window(nullptr), renderer(nullptr), font(nullptr), icon(nullptr) {}
 
 Renderer::~Renderer() {
-    if (cachedBackground)
-    {
-        SDL_DestroyTexture(cachedBackground);
-        cachedBackground = nullptr;
-    }
     if (iconTexture)
     {
         SDL_DestroyTexture(iconTexture);
@@ -585,13 +579,15 @@ void Renderer::renderMenuScreen() {
     }
     SDL_RenderDrawRect(renderer, &buttonRect);
 
-    // Button text (bold when hovered)
+    // Button text 
     SDL_Color white = {255, 255, 255, 255};
+    int tw = 0, th = 0;
     if (isHovered) TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    TTF_SizeText(font, "Start Game", &tw, &th);
     renderText("Start Game",
-              buttonRect.x + (buttonRect.w - 100) / 2,
-              buttonRect.y + (buttonRect.h - 24) / 2,
-              white);
+               buttonRect.x + (buttonRect.w - tw) / 2,
+               buttonRect.y + (buttonRect.h - th) / 2,
+               white);
     if (isHovered) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
 
     SDL_RenderPresent(renderer);

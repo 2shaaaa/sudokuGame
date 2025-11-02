@@ -11,8 +11,6 @@ public:
     static const int SUBGRID_SIZE = 3;
 
     Sudoku();
-    // difficulty: 1 = Easy, 2 = Medium (default), 3 = Hard
-    void generatePuzzle();
     void generatePuzzle(int difficulty);
     bool isValid(int row, int col, int num) const;
     bool isCellEditable(int row, int col) const;
@@ -22,8 +20,8 @@ public:
     bool hasConflict(int row, int col) const;
 
 private:
-    std::vector<std::vector<int>> grid;
-    std::vector<std::vector<bool>> fixed;
+    std::vector<std::vector<int>> grid; // 9x9 grid
+    std::vector<std::vector<bool>> fixed; // the given cells uneditable
     
     bool solveGrid();
     bool findEmptyCell(int &row, int &col) const;
