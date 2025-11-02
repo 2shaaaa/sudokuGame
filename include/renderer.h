@@ -26,6 +26,10 @@ public:
     void renderTimer(int elapsedSeconds);
     void renderVictoryScreen(int elapsedSeconds);
     void renderMenuScreen();
+    // Render difficulty selection screen (Easy / Medium / Hard)
+    void renderDifficultyScreen();
+    // Return: 0 = none, 1 = Easy, 2 = Medium, 3 = Hard
+    int handleDifficultyClick(int x, int y);
     // Animate a ripple effect originating from a cell (row,col) over the grid
     void completeEffect(const Sudoku& sudoku, int originRow, int originCol, int durationMs = 1200);
     int handleVictoryScreenClick(int x, int y);
@@ -35,6 +39,7 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_Font* font;
+    SDL_Surface* icon;
 
     void renderGrid();
     void renderNumbers(const Sudoku& sudoku);
@@ -45,7 +50,7 @@ private:
     std::array<int, 9> calculateNumberCounts(const Sudoku& sudoku) const;
 
     static SDL_Texture *cachedBackground;
-    static SDL_Texture *resetTexture;
+    static SDL_Texture *iconTexture;
 
 };
 
