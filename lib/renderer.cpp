@@ -64,7 +64,7 @@ bool Renderer::init() {
         return false;
     }
 
-    icon = IMG_Load("/Users/tusha/Documents/GitHub/sudokuGame/image/menu_icon.png");
+    icon = IMG_Load("../image/menu_icon.png");
     if (icon) {
         // create texture once and free the surface
         iconTexture = SDL_CreateTextureFromSurface(renderer, icon);
