@@ -1,16 +1,12 @@
 # Compiler
 CXX = g++
 CXXFLAGS = -std=c++17 -I../include
-SDL_FLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf SDL2_mixer)
+SDL_FLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf)
 
 # Target
 TARGET = play
 
-# Nguồn (các file trong src/)
-SRCS = main.cpp
-
-# Source files
-SRCS = main.cpp
+# Lib files
 LIB_SRCS = $(addprefix ../lib/, game.cpp renderer.cpp sudoku.cpp)
 
 # Source files
