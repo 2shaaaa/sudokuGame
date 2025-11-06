@@ -25,7 +25,6 @@ void Game::run() {
         if (state == GameState::PLAYING) {
             updateTimer();
         }
-        // If a win was detected during event handling, stop before drawing
         if (running) {
             if (state == GameState::MENU) {
                 renderer.renderMenuScreen();
@@ -61,6 +60,14 @@ void Game::handleEvents() {
                 }
                 break;
             case SDL_KEYDOWN:
+                // Enable reset puzzle anytime while playing
+                if (state == GameState::PLAYING && event.key.keysym.sym == SDLK_r) {
+                    sudoku.generatePuzzle(difficulty);
+                    startTime = SDL_GetTicks();
+                    elapsedSeconds = 0;
+                    currentElapsedSeconds = 0;
+                    selectedRow = selectedCol = -1;
+                }
                 handleKeyPress(event.key.keysym.sym);
                 break;
             default:
@@ -122,6 +129,7 @@ void Game::handleKeyPress(SDL_Keycode key) {
 
 void Game::checkWinCondition() {
     if (sudoku.isSolved()) {
+        // Trigger completion effect
         if (selectedRow >= 0 && selectedCol >= 0) {
             renderer.completeEffect(sudoku, selectedRow, selectedCol, 1500);
         } else {
@@ -168,7 +176,7 @@ void Game::checkWinCondition() {
             startTime = SDL_GetTicks();
             elapsedSeconds = 0;
             currentElapsedSeconds = 0;
-        } else if (action == 3) {
+        } else if (action == 3) { // Exit
             shouldClose = true;
             running = false;
         }
