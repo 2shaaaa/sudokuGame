@@ -10,6 +10,9 @@
 
 
 SDL_Texture *Renderer::iconTexture = nullptr;
+const int GRID_START_Y = 50;
+const int GRID_PIXELS = Sudoku::GRID_SIZE * Renderer::CELL_SIZE;
+const int GRID_START_X = (Renderer::WINDOW_WIDTH - GRID_PIXELS) / 2;
 
 Renderer::Renderer() : window(nullptr), renderer(nullptr), font(nullptr), icon(nullptr) {}
 
@@ -135,15 +138,6 @@ void Renderer::render(const Sudoku& sudoku, int selectedRow, int selectedCol) {
 void Renderer::renderGrid() {
     SDL_SetRenderDrawColor(renderer, 56, 87, 246, 255);
 
-	// Move grid down by 50 pixels to accommodate score display
-	const int GRID_START_Y = 50;
-
-	// Use gridSize defined at top; ensure 9 cells fit exactly
-	const int GRID_PIXELS = 9 * CELL_SIZE;
-
-	// Center grid horizontally
-	const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
-
 	// Draw horizontal lines
 	for (int i = 0; i <= 9; i++) {
 		int lineWidth = (i % 3 == 0) ? 3 : 1;
@@ -195,7 +189,7 @@ void Renderer::renderNumber(int number, int row, int col, bool isFixed, bool has
 
     // Calculate the grid offset for proper positioning
     const int GRID_START_Y = 50;
-    const int GRID_START_X = (WINDOW_WIDTH - (9 * CELL_SIZE)) / 2;
+    const int GRID_START_X = (WINDOW_WIDTH - (Sudoku::GRID_SIZE * CELL_SIZE)) / 2;
 
     SDL_Rect dstRect = {
         GRID_START_X + col * CELL_SIZE + (CELL_SIZE - textW) / 2,
@@ -209,9 +203,6 @@ void Renderer::renderNumber(int number, int row, int col, bool isFixed, bool has
 }
 
 void Renderer::getGridPosition(int x, int y, int &row, int &col) {
-    const int GRID_START_Y = 50;
-    const int GRID_PIXELS = Sudoku::GRID_SIZE * CELL_SIZE;
-    const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
     row = (y - GRID_START_Y) / CELL_SIZE;
     col = (x - GRID_START_X) / CELL_SIZE;
 
@@ -223,12 +214,9 @@ void Renderer::getGridPosition(int x, int y, int &row, int &col) {
 }
 
 void Renderer::renderSelectedCell(int row, int col) {
-    const int GRID_START_Y = 50;
-    const int GRID_PIXELS = Sudoku::GRID_SIZE * CELL_SIZE;
-    const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
-
+    // Hightlight row and col
     SDL_Rect rowRect = {GRID_START_X, GRID_START_Y + row * CELL_SIZE, GRID_PIXELS, CELL_SIZE};    
-    SDL_Rect colRect = {GRID_START_X +col * CELL_SIZE, GRID_START_Y, CELL_SIZE, GRID_PIXELS};
+    SDL_Rect colRect = {GRID_START_X + col * CELL_SIZE, GRID_START_Y, CELL_SIZE, GRID_PIXELS};
 
     // Highlight the 3x3 subgrid with yet another faint blue
     SDL_SetRenderDrawColor(renderer, 210, 233, 253, 255); // Third very light blue
@@ -248,15 +236,11 @@ void Renderer::renderSelectedCell(int row, int col) {
 
 void Renderer::renderNumberCounts(const Sudoku& sudoku) {
     auto counts = calculateNumberCounts(sudoku);
-    
-    // Use same grid constants for alignment
-    const int GRID_START_Y = 50;
-    const int GRID_PIXELS = Sudoku::GRID_SIZE * CELL_SIZE;
-    const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
-    
+        
     // Position the counter row just below the grid
     const int COUNTER_Y = GRID_START_Y + GRID_PIXELS + 10;
     
+    // Define colors for complete and incomplete numbers
     for (int i = 0; i < 9; i++) {
         SDL_Color color = (counts[i] == 9) ? SDL_Color{56, 87, 246, 255} : SDL_Color{0, 0, 0, 255};
         
@@ -292,8 +276,8 @@ void Renderer::renderNumberCounts(const Sudoku& sudoku) {
                     // Position and size the superscript
                     SDL_Rect countRect = {
                         numRect.x + numRect.w - 2,        // Slightly overlapping with number
-                        numRect.y - numRect.h/4,          // Raised above the baseline
-                        static_cast<int>(countSurface->w * 0.5),  // Make it 40% of original size
+                        numRect.y - numRect.h / 4,          // Raised above the baseline
+                        static_cast<int>(countSurface->w * 0.5),  // Make it 50% of original size
                         static_cast<int>(countSurface->h * 0.5)
                     };
                     SDL_RenderCopy(renderer, countTexture, nullptr, &countRect);
@@ -327,14 +311,17 @@ void Renderer::renderText(const std::string& text, int x, int y, SDL_Color color
 }
 
 void Renderer::renderTimer(int elapsedSeconds) {
+    // Calculate minutes and seconds
     int minutes = elapsedSeconds / 60;
     int seconds = elapsedSeconds % 60;
 
+    // Timer format
     std::ostringstream ss;
     ss << "Time: " << std::setw(2) << std::setfill('0') << minutes << ":"
         << std::setw(2) << std::setfill('0') << seconds;
 
     SDL_Color color = {0, 0, 0, 255}; // Black color for timer
+    // Render at top-left corner
     renderText(ss.str(), 20, 10, color);
 }
 
@@ -441,7 +428,6 @@ void Renderer::renderVictoryScreen(int elapsedSeconds) {
     renderText(exitStr, exitBody.x + (exitBody.w - tw) / 2, exitBody.y + (exitBody.h - th) / 2, {255, 255, 255, 255});
     if (hoverExit) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
 
-    // Present once
     SDL_RenderPresent(renderer);
 }
 
@@ -493,7 +479,7 @@ void Renderer::renderMenuScreen() {
     TTF_Font* titleFont = TTF_OpenFont("/System/Library/Fonts/Supplemental/Comic Sans MS.ttf", 72);
     TTF_SetFontStyle(titleFont, TTF_STYLE_BOLD);
     // Use the same title color as the victory screen for visual consistency
-    SDL_Color titleColor = {99, 108, 203, 255}; // Victory-screen purple-blue
+    SDL_Color titleColor = {99, 108, 203, 255};
     
     // Render SUDOKU title with larger font
     SDL_Surface* surface = TTF_RenderText_Blended(titleFont, "sUdOkU", titleColor);
@@ -511,7 +497,7 @@ void Renderer::renderMenuScreen() {
         }
         TTF_CloseFont(titleFont);
 
-            // Set font style and size for the subtitle
+    // Set font style and size for the subtitle
     TTF_Font* subtitleFont = TTF_OpenFont("/System/Library/Fonts/Supplemental/Comic Sans MS.ttf", 16);
     TTF_SetFontStyle(subtitleFont, TTF_STYLE_ITALIC);
     SDL_Color subtitleColor = {128, 128, 128, 255}; // Gray color for subtitle
@@ -673,16 +659,28 @@ void Renderer::renderDifficultyScreen() {
     SDL_RenderFillRect(renderer, &b3);
 
     // Button text
-    TTF_SetFontStyle(font, TTF_STYLE_BOLD);
-    renderText("Easy", b1.x + (b1.w/2) - 24, b1.y + (b1.h/2) - 12, {255,255,255,255});
-    renderText("Medium", b2.x + (b2.w/2) - 36, b2.y + (b2.h/2) - 12, {255,255,255,255});
-    renderText("Hard", b3.x + (b3.w/2) - 24, b3.y + (b3.h/2) - 12, {255,255,255,255});
-    TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+    int tw, th;
+    
+    if (hoverEasy) TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    TTF_SizeText(font, "Easy", &tw, &th);
+    renderText("Easy", b1.x + (b1.w - tw) / 2, b1.y + (b1.h - th) / 2, {255,255,255,255});
+    if (hoverEasy) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+
+    if (hoverMed) TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    TTF_SizeText(font, "Medium", &tw, &th);
+    renderText("Medium", b2.x + (b2.w - tw) / 2, b2.y + (b2.h - th) / 2, {255,255,255,255});
+    if (hoverMed) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+
+    if (hoverHard) TTF_SetFontStyle(font, TTF_STYLE_BOLD);
+    TTF_SizeText(font, "Hard", &tw, &th);
+    renderText("Hard", b3.x + (b3.w - tw) / 2, b3.y + (b3.h - th) / 2, {255,255,255,255});
+    if (hoverHard) TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
 
     SDL_RenderPresent(renderer);
 }
 
 int Renderer::handleDifficultyClick(int x, int y) {
+    // Match button positions from renderDifficultyScreen
     const int btnW = 220;
     const int btnH = 50;
     const int gap = 20;
@@ -694,6 +692,7 @@ int Renderer::handleDifficultyClick(int x, int y) {
     SDL_Rect medBtn = { xPos, startY + btnH + gap, btnW, btnH };
     SDL_Rect hardBtn = { xPos, startY + 2*(btnH + gap), btnW, btnH };
 
+    // Return for 3 levels
     if (x >= easyBtn.x && x <= easyBtn.x + easyBtn.w && y >= easyBtn.y && y <= easyBtn.y + easyBtn.h) return 1;
     if (x >= medBtn.x && x <= medBtn.x + medBtn.w && y >= medBtn.y && y <= medBtn.y + medBtn.h) return 2;
     if (x >= hardBtn.x && x <= hardBtn.x + hardBtn.w && y >= hardBtn.y && y <= hardBtn.y + hardBtn.h) return 3;
@@ -714,10 +713,6 @@ std::array<int, 9> Renderer::calculateNumberCounts(const Sudoku& sudoku) const {
 }
 
 void Renderer::completeEffect(const Sudoku& sudoku, int originRow, int originCol, int durationMs) {
-    const int GRID_START_Y = 50;
-    const int GRID_PIXELS = 9 * CELL_SIZE;
-    const int GRID_START_X = (WINDOW_WIDTH - GRID_PIXELS) / 2;
-
     // origin center in pixels
     const double originCx = GRID_START_X + originCol * CELL_SIZE + CELL_SIZE / 2.0;
     const double originCy = GRID_START_Y + originRow * CELL_SIZE + CELL_SIZE / 2.0;

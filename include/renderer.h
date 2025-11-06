@@ -16,21 +16,15 @@ public:
     Renderer();
     ~Renderer();
 
-    // initialize SDL, window, renderer, and font
     bool init();
-    // render the whole game
     void render(const Sudoku& sudoku, int selectedRow = -1, int selectedCol = -1);
-    // convert mouse coordinates to grid position / where mousee points to
-    void getGridPosition(int x, int y, int& row, int& col);
+    void getGridPosition(int x, int y, int& row, int& col);     // convert mouse coordinates to grid position / where mousee points to
     void close();
     void renderTimer(int elapsedSeconds);
     void renderVictoryScreen(int elapsedSeconds);
     void renderMenuScreen();
-    // Render difficulty selection screen (Easy / Medium / Hard)
     void renderDifficultyScreen();
-    // Return: 0 = none, 1 = Easy, 2 = Medium, 3 = Hard
     int handleDifficultyClick(int x, int y);
-    // Animate a ripple effect originating from a cell (row,col) over the grid
     void completeEffect(const Sudoku& sudoku, int originRow, int originCol, int durationMs = 1200);
     int handleVictoryScreenClick(int x, int y);
     bool handleMenuClick(int x, int y);

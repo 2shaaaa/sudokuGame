@@ -30,12 +30,11 @@ private:
     int selectedRow;
     int selectedCol;
     
-
     Uint32 startTime;
     int elapsedSeconds;
     static int currentElapsedSeconds;
-    bool handleMenuClick(int x, int y);
 
+    bool handleMenuClick(int x, int y);
     void handleEvents();
     void handleMouseClick(int x, int y);
     void handleKeyPress(SDL_Keycode key);

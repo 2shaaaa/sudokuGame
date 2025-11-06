@@ -25,7 +25,6 @@ private:
     
     bool solveGrid();
     bool findEmptyCell(int &row, int &col) const;
-    void removeCells();
     void removeCells(int cellsToRemove);
     bool isValidInRow(int row, int num) const;
     bool isValidInCol(int col, int num) const;
