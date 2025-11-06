@@ -43,13 +43,13 @@ void Sudoku::generatePuzzle(int difficulty) {
     int cellsToRemove = 0;
     if (difficulty <= 1) {
         // Easy: fewer removals (more clues)
-        cellsToRemove = 1; //36 + (std::rand() % 9); // 36..44
+        cellsToRemove = 36 + (std::rand() % 9); // 36..44
     } else if (difficulty == 2) {
         // Medium: previous behavior
-        cellsToRemove = 2; //45 + (std::rand() % 11); // 45..55
+        cellsToRemove = 45 + (std::rand() % 11); // 45..55
     } else {
         // Hard: more removals (fewer clues)
-        cellsToRemove = 3; //56 + (std::rand() % 5); // 56..60
+        cellsToRemove = 56 + (std::rand() % 5); // 56..60
     }
 
     removeCells(cellsToRemove);
